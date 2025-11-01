@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Fluxo de Pagamento</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f6fb;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #00509e;
+    }
+
+    .result {
+      margin-top: 25px;
+      background-color: #eef3fa;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .result strong {
+      color: #003366;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Simulador de Fluxo de Pagamento</h2>
+
+    <label for="valor">Valor total do imóvel (R$)</label>
+    <input type="text" id="valor" value="730.000,00">
+
+    <label for="percentualEntrega">Percentual até a entrega (%)</label>
+    <input type="number" id="percentualEntrega" value="50">
+
+    <label for="percentualSinal">Percentual do sinal (%)</label>
+    <input type="number" id="percentualSinal" value="10">
+
+    <label for="parcelasMensais">Número de parcelas mensais</label>
+    <input type="number" id="parcelasMensais" value="48">
+
+    <label for="parcelasIntercaladas">Número de parcelas intercaladas</label>
+    <input type="number" id="parcelasIntercaladas" value="8">
+
+    <label for="parcelasSinal">Parcelas do sinal (1, 2 ou 3)</label>
+    <select id="parcelasSinal">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+
+    <button onclick="calcularFluxo()">Calcular Fluxo</button>
+
+    <div class="result" id="resultado"></div>
+  </div>
+
+  <script>
+    // Função para formatar valor como moeda brasileira
+    function formatarMoeda(valor) {
+      valor = valor.replace(/\D/g, '');
+      valor = (parseInt(valor) / 100).toFixed(2);
+      valor = valor.replace('.', ',');
+      valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+      return valor;
+    }
+
+    // Função para remover formatação e obter valor numérico
+    function obterValorNumerico(valor) {
+      return parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+    }
+
+    // Adicionar evento de input no campo de valor
+    document.getElementById('valor').addEventListener('input', function(e) {
+      let valor = e.target.value;
+      e.target.value = formatarMoeda(valor);
+    });
+
+    function calcularFluxo() {
+      const valorTotal = obterValorNumerico(document.getElementById('valor').value);
+      const percentualEntrega = parseFloat(document.getElementById('percentualEntrega').value) / 100;
+      const percentualSinal = parseFloat(document.getElementById('percentualSinal').value) / 100;
+      const parcelasMensais = parseInt(document.getElementById('parcelasMensais').value);
+      const parcelasIntercaladas = parseInt(document.getElementById('parcelasIntercaladas').value);
+      const parcelasSinal = parseInt(document.getElementById('parcelasSinal').value);
+
+      // Cálculos
+      const totalAteEntrega = valorTotal * percentualEntrega;
+      const valorSinal = valorTotal * percentualSinal;
+      const restanteAteEntrega = totalAteEntrega - valorSinal;
+
+      // Distribuição igual: 10% sinal, 20% mensais, 20% intercaladas (no caso de 50% até entrega)
+      const valorMensais = (valorTotal * 0.20) / parcelasMensais;
+      const valorIntercaladas = (valorTotal * 0.20) / parcelasIntercaladas;
+      const saldoEntrega = valorTotal - totalAteEntrega;
+
+      // Formatação
+      const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      // Resultado
+      document.getElementById('resultado').innerHTML = `
+        <strong>Valor do imóvel:</strong> ${fmt(valorTotal)}<br>
+        <strong>Valor do sinal (${percentualSinal * 100}%):</strong> ${fmt(valorSinal)} (${parcelasSinal}x de ${fmt(valorSinal / parcelasSinal)})<br>
+        <strong>Total até a entrega (${percentualEntrega * 100}%):</strong> ${fmt(totalAteEntrega)}<br>
+        <strong>Parcelas mensais (${parcelasMensais}x):</strong> ${fmt(valorMensais)}<br>
+        <strong>Intercaladas (${parcelasIntercaladas}x):</strong> ${fmt(valorIntercaladas)}<br>
+        <strong>Saldo na entrega (${(1 - percentualEntrega) * 100}%):</strong> ${fmt(saldoEntrega)}<br>
+      `;
+    }
+
+
+  </script>
+  
+</body>
+</html>
