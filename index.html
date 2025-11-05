@@ -11,7 +11,6 @@
       margin: 0;
       padding: 0;
     }
-
     .container {
       max-width: 600px;
       margin: 50px auto;
@@ -20,20 +19,17 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       padding: 30px;
     }
-
     h2 {
       text-align: center;
       color: #003366;
       margin-bottom: 25px;
     }
-
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
       color: #333;
     }
-
     input, select {
       width: 100%;
       padding: 10px;
@@ -42,7 +38,6 @@
       border-radius: 6px;
       font-size: 16px;
     }
-
     button {
       width: 100%;
       margin-top: 20px;
@@ -55,11 +50,9 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-
     button:hover {
       background-color: #00509e;
     }
-
     .result {
       margin-top: 25px;
       background-color: #eef3fa;
@@ -67,7 +60,6 @@
       border-radius: 8px;
       font-size: 16px;
     }
-
     .result strong {
       color: #003366;
     }
@@ -81,7 +73,7 @@
     <input type="text" id="valor" value="730.000,00">
 
     <label for="percentualEntrega">Percentual até a entrega (%)</label>
-    <input type="number" id="percentualEntrega" value="50">
+    <input type="number" id="percentualEntrega" value="60">
 
     <label for="percentualSinal">Percentual do sinal (%)</label>
     <input type="number" id="percentualSinal" value="10">
@@ -96,7 +88,7 @@
     <select id="parcelasSinal">
       <option value="1">1</option>
       <option value="2">2</option>
-      <option value="3">3</option>
+      <option value="3" selected>3</option>
     </select>
 
     <button onclick="calcularFluxo()">Calcular Fluxo</button>
@@ -105,7 +97,6 @@
   </div>
 
   <script>
-    // Função para formatar valor como moeda brasileira
     function formatarMoeda(valor) {
       valor = valor.replace(/\D/g, '');
       valor = (parseInt(valor) / 100).toFixed(2);
@@ -114,12 +105,10 @@
       return valor;
     }
 
-    // Função para remover formatação e obter valor numérico
     function obterValorNumerico(valor) {
       return parseFloat(valor.replace(/\./g, '').replace(',', '.'));
     }
 
-    // Adicionar evento de input no campo de valor
     document.getElementById('valor').addEventListener('input', function(e) {
       let valor = e.target.value;
       e.target.value = formatarMoeda(valor);
@@ -133,20 +122,24 @@
       const parcelasIntercaladas = parseInt(document.getElementById('parcelasIntercaladas').value);
       const parcelasSinal = parseInt(document.getElementById('parcelasSinal').value);
 
-      // Cálculos
+      if (percentualSinal > percentualEntrega) {
+        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> O percentual do sinal não pode ser maior que o percentual até a entrega.`;
+        return;
+      }
+
       const totalAteEntrega = valorTotal * percentualEntrega;
       const valorSinal = valorTotal * percentualSinal;
-      const restanteAteEntrega = totalAteEntrega - valorSinal;
 
-      // Distribuição igual: 10% sinal, 20% mensais, 20% intercaladas (no caso de 50% até entrega)
-      const valorMensais = (valorTotal * 0.20) / parcelasMensais;
-      const valorIntercaladas = (valorTotal * 0.20) / parcelasIntercaladas;
+      const percentualRestante = percentualEntrega - percentualSinal;
+      const percentualMensais = percentualRestante / 2;
+      const percentualIntercaladas = percentualRestante / 2;
+
+      const valorMensais = (valorTotal * percentualMensais) / parcelasMensais;
+      const valorIntercaladas = (valorTotal * percentualIntercaladas) / parcelasIntercaladas;
       const saldoEntrega = valorTotal - totalAteEntrega;
 
-      // Formatação
       const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      // Resultado
       document.getElementById('resultado').innerHTML = `
         <strong>Valor do imóvel:</strong> ${fmt(valorTotal)}<br>
         <strong>Valor do sinal (${percentualSinal * 100}%):</strong> ${fmt(valorSinal)} (${parcelasSinal}x de ${fmt(valorSinal / parcelasSinal)})<br>
@@ -156,9 +149,6 @@
         <strong>Saldo na entrega (${(1 - percentualEntrega) * 100}%):</strong> ${fmt(saldoEntrega)}<br>
       `;
     }
-
-
   </script>
-  
 </body>
 </html>
