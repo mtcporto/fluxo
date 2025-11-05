@@ -63,6 +63,7 @@
     .result strong {
       color: #003366;
     }
+    .small { font-size: 14px; color: #444 }
   </style>
 </head>
 <body>
@@ -100,14 +101,15 @@
   <script>
     function formatarMoeda(valor) {
       valor = valor.replace(/\D/g, '');
-      valor = (parseInt(valor) / 100).toFixed(2);
+      valor = (parseInt(valor || '0') / 100).toFixed(2);
       valor = valor.replace('.', ',');
       valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
       return valor;
     }
 
     function obterValorNumerico(valor) {
-      return parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+      if (typeof valor !== 'string') return 0;
+      return parseFloat(valor.replace(/\./g, '').replace(',', '.') || 0);
     }
 
     document.getElementById('valor').addEventListener('input', function(e) {
@@ -116,38 +118,79 @@
     });
 
     function calcularFluxo() {
+      // Ler inputs
       const valorTotal = obterValorNumerico(document.getElementById('valor').value);
       const percentualEntrega = parseFloat(document.getElementById('percentualEntrega').value) / 100;
       const percentualSinal = parseFloat(document.getElementById('percentualSinal').value) / 100;
-      const parcelasMensais = parseInt(document.getElementById('parcelasMensais').value);
-      const parcelasIntercaladas = parseInt(document.getElementById('parcelasIntercaladas').value);
-      const parcelasSinal = parseInt(document.getElementById('parcelasSinal').value);
+      const parcelasMensais = parseInt(document.getElementById('parcelasMensais').value) || 0;
+      const parcelasIntercaladas = parseInt(document.getElementById('parcelasIntercaladas').value) || 0;
+      const parcelasSinal = parseInt(document.getElementById('parcelasSinal').value) || 1;
 
+      // Validações básicas
+      if (isNaN(valorTotal) || valorTotal <= 0) {
+        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> Valor do imóvel inválido.`;
+        return;
+      }
       if (percentualSinal > percentualEntrega) {
         document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> O percentual do sinal não pode ser maior que o percentual até a entrega.`;
         return;
       }
+      if (parcelasMensais === 0 && parcelasIntercaladas === 0) {
+        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> Pelo menos um dos campos de parcelas (mensais ou intercaladas) deve ser maior que zero.`;
+        return;
+      }
 
-      const totalAteEntrega = valorTotal * percentualEntrega;
-      const valorSinal = valorTotal * percentualSinal;
+      // Cálculos
+      const totalAteEntrega = valorTotal * percentualEntrega; // ex: 60% do imóvel
+      const valorSinal = valorTotal * percentualSinal; // ex: 10% do imóvel
 
-      const percentualRestante = percentualEntrega - percentualSinal;
-      const percentualMensais = percentualRestante / 2;
-      const percentualIntercaladas = percentualRestante / 2;
+      const percentualRestante = percentualEntrega - percentualSinal; // o que falta até o percentualEntrega
 
-      const valorMensais = (valorTotal * percentualMensais) / parcelasMensais;
-      const valorIntercaladas = (valorTotal * percentualIntercaladas) / parcelasIntercaladas;
+      // dividir o percentual restante entre mensais e intercaladas (metade/metade por padrão)
+      let percentualMensais = percentualRestante / 2;
+      let percentualIntercaladas = percentualRestante / 2;
+
+      // se intercaladas for zero, repassa tudo para mensais
+      if (parcelasIntercaladas === 0) {
+        percentualMensais = percentualRestante;
+        percentualIntercaladas = 0;
+      }
+
+      // calcular valores unitários
+      const valorTotalMensaisParte = valorTotal * percentualMensais; // total em reais destinado às mensais
+      const valorTotalIntercaladasParte = valorTotal * percentualIntercaladas; // total em reais destinado às intercaladas
+
+      const valorMensais = parcelasMensais > 0 ? (valorTotalMensaisParte / parcelasMensais) : 0;
+      const valorIntercaladas = parcelasIntercaladas > 0 ? (valorTotalIntercaladasParte / parcelasIntercaladas) : 0;
+
       const saldoEntrega = valorTotal - totalAteEntrega;
 
       const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+      // Soma de conferência (sinal + total das mensais + total das intercaladas)
+      const somaPartes = valorSinal + (valorMensais * parcelasMensais) + (valorIntercaladas * parcelasIntercaladas);
+
+      // Exibir resultado claro para cliente
       document.getElementById('resultado').innerHTML = `
         <strong>Valor do imóvel:</strong> ${fmt(valorTotal)}<br>
-        <strong>Valor do sinal (${percentualSinal * 100}%):</strong> ${fmt(valorSinal)} (${parcelasSinal}x de ${fmt(valorSinal / parcelasSinal)})<br>
-        <strong>Total até a entrega (${percentualEntrega * 100}%):</strong> ${fmt(totalAteEntrega)}<br>
-        <strong>Parcelas mensais (${parcelasMensais}x):</strong> ${fmt(valorMensais)}<br>
+        <strong>Valor do sinal (${(percentualSinal*100).toFixed(2).replace('.00','')}%):</strong> ${fmt(valorSinal)} (${parcelasSinal}x de ${fmt(valorSinal / parcelasSinal)})<br>
+        <strong>Total até a entrega (${(percentualEntrega*100).toFixed(2).replace('.00','')}%):</strong> ${fmt(totalAteEntrega)}<br>
+
+        <hr>
+        <strong>Parcelas mensais (${parcelasMensais}x):</strong> ${fmt(valorMensais)} ${parcelasIntercaladas === 0 ? '<span class="small">(inclui porcentagem das intercaladas)</span>' : ''}<br>
+        <em class="small">Parte original das mensais:</em> ${fmt(valorTotalMensaisParte)}<br>
+        ${parcelasIntercaladas === 0 ? `<em class="small">Parte absorvida das intercaladas:</em> ${fmt(valorTotalIntercaladasParte)}<br>` : ''}
+        <em class="small">Total das mensais (valor unitário × nº parcelas):</em> ${fmt(valorMensais * parcelasMensais)}<br>
+
         <strong>Intercaladas (${parcelasIntercaladas}x):</strong> ${fmt(valorIntercaladas)}<br>
-        <strong>Saldo na entrega (${(1 - percentualEntrega) * 100}%):</strong> ${fmt(saldoEntrega)}<br>
+        <em class="small">Total das intercaladas:</em> ${fmt(valorIntercaladas * parcelasIntercaladas)}<br>
+
+        <strong>Saldo na entrega (${((1 - percentualEntrega)*100).toFixed(2).replace('.00','')}%):</strong> ${fmt(saldoEntrega)}<br>
+
+        <br>
+        <strong>✅ Conferência (soma das partes até a entrega):</strong><br>
+        Sinal: ${fmt(valorSinal)} + Mensais (total): ${fmt(valorMensais * parcelasMensais)} + Intercaladas (total): ${fmt(valorIntercaladas * parcelasIntercaladas)} = <strong>${fmt(somaPartes)}</strong><br>
+        <em class="small">Deve ser igual a Total até a entrega: ${fmt(totalAteEntrega)}</em>
       `;
     }
   </script>
