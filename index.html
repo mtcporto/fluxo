@@ -5,87 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Fluxo de Pagamento</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f6fb;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 50px auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-    }
-    h2 {
-      text-align: center;
-      color: #003366;
-      margin-bottom: 25px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #333;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 16px;
-    }
-    button {
-      width: 100%;
-      margin-top: 20px;
-      background-color: #003366;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background-color: #00509e;
-    }
-    .result {
-      margin-top: 25px;
-      background-color: #eef3fa;
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    .result strong {
-      color: #003366;
-    }
-    .small { font-size: 14px; color: #444 }
+    body { font-family: Arial, sans-serif; background-color: #f2f6fb; margin: 0; padding: 0; }
+    .container { max-width: 700px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 28px; }
+    h2 { text-align: center; color: #003366; margin-bottom: 18px; }
+    label.field { display:block; margin-top:12px; font-weight:700; color:#333; }
+    input[type="text"], input[type="number"], select { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; font-size:15px }
+    .radios-row { margin-top:6px; display:flex; gap:18px; align-items:center }
+    .radios-row label { font-weight:400 }
+    button { width:100%; margin-top:18px; background:#003366; color:#fff; border:none; padding:12px; border-radius:8px; font-size:17px; cursor:pointer }
+    button:hover { background:#00509e }
+    .result { margin-top:20px; background:#eef3fa; padding:18px; border-radius:8px; font-size:15px }
+    .small { font-size:13px; color:#444 }
+    hr { border:0; height:1px; background:#e0e7f0; margin:12px 0 }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Simulador de Fluxo de Pagamento</h2>
 
-    <label for="valor">Valor total do imóvel (R$)</label>
-    <input type="text" id="valor" value="730.000,00">
+    <label class="field" for="valor">Valor total do imóvel (R$)</label>
+    <input type="text" id="valor" value="730.000,00" />
 
-    <label for="percentualEntrega">Percentual até a entrega (%)</label>
-    <input type="number" id="percentualEntrega" value="60">
+    <label class="field" for="percentualEntrega">Percentual até a entrega (%)</label>
+    <input type="number" id="percentualEntrega" value="60" min="0" max="100" />
 
-    <label for="percentualSinal">Percentual do sinal (%)</label>
-    <input type="number" id="percentualSinal" value="10">
+    <label class="field" for="percentualSinal">Percentual do sinal (%)</label>
+    <input type="number" id="percentualSinal" value="10" min="0" max="100" />
 
-    <label for="parcelasMensais">Número de parcelas mensais</label>
-    <input type="number" id="parcelasMensais" value="48">
+    <label class="field" for="parcelasMensais">Número de parcelas mensais</label>
+    <input type="number" id="parcelasMensais" value="48" min="0" />
 
-    <label for="parcelasIntercaladas">Número de parcelas intercaladas</label>
-    <input type="number" id="parcelasIntercaladas" value="8">
+    <label class="field">Parcelas intercaladas</label>
+    <div class="radios-row" role="radiogroup" aria-label="Parcelas intercaladas">
+      <label><input type="radio" name="parcelasIntercaladas" value="4" checked> Semestrais (4)</label>
+      <label><input type="radio" name="parcelasIntercaladas" value="8"> Anuais (8)</label>
+      <label style="margin-left:auto"><input type="checkbox" id="usarIntercaladasZero"> Usar 0 (não haverá intercaladas)</label>
+    </div>
 
-    <label for="parcelasSinal">Parcelas do sinal (1, 2, 3 ou 4)</label>
+    <label class="field" for="parcelasSinal">Parcelas do sinal (1, 2, 3 ou 4)</label>
     <select id="parcelasSinal">
       <option value="1">1</option>
       <option value="2">2</option>
@@ -93,57 +50,67 @@
       <option value="4">4</option>
     </select>
 
-    <button onclick="calcularFluxo()">Calcular Fluxo</button>
+    <button id="btnCalcular">Calcular Fluxo</button>
 
     <div class="result" id="resultado"></div>
   </div>
 
   <script>
+    // form helpers
     function formatarMoeda(valor) {
-      valor = valor.replace(/\D/g, '');
-      valor = (parseInt(valor || '0') / 100).toFixed(2);
-      valor = valor.replace('.', ',');
+      valor = String(valor).replace(/\D/g,'');
+      valor = (parseInt(valor || '0')/100).toFixed(2);
+      valor = valor.replace('.',',');
       valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
       return valor;
     }
-
     function obterValorNumerico(valor) {
       if (typeof valor !== 'string') return 0;
-      return parseFloat(valor.replace(/\./g, '').replace(',', '.') || 0);
+      return parseFloat(valor.replace(/\./g,'').replace(',','.') || 0);
     }
 
-    document.getElementById('valor').addEventListener('input', function(e) {
-      let valor = e.target.value;
-      e.target.value = formatarMoeda(valor);
+    // máscara simples para o campo de valor
+    document.getElementById('valor').addEventListener('input', function(e){
+      const pos = e.target.selectionStart;
+      e.target.value = formatarMoeda(e.target.value);
+      // não tentamos preservar caret perfeitamente para simplicidade
     });
 
-    function calcularFluxo() {
-      // Ler inputs
-      const valorTotal = obterValorNumerico(document.getElementById('valor').value);
-      const percentualEntrega = parseFloat(document.getElementById('percentualEntrega').value) / 100;
-      const percentualSinal = parseFloat(document.getElementById('percentualSinal').value) / 100;
-      const parcelasMensais = parseInt(document.getElementById('parcelasMensais').value) || 0;
-      const parcelasIntercaladas = parseInt(document.getElementById('parcelasIntercaladas').value) || 0;
-      const parcelasSinal = parseInt(document.getElementById('parcelasSinal').value) || 1;
+    // função de leitura do radio/checkbox de intercaladas
+    function lerParcelasIntercaladas() {
+      const usarZero = document.getElementById('usarIntercaladasZero').checked;
+      if (usarZero) return 0;
+      const r = document.querySelector('input[name="parcelasIntercaladas"]:checked');
+      if (!r) return 4; // fallback
+      return parseInt(r.value, 10) || 4;
+    }
 
-      // Validações básicas
-      if (isNaN(valorTotal) || valorTotal <= 0) {
-        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> Valor do imóvel inválido.`;
-        return;
-      }
-      if (percentualSinal > percentualEntrega) {
-        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> O percentual do sinal não pode ser maior que o percentual até a entrega.`;
-        return;
-      }
-      if (parcelasMensais === 0 && parcelasIntercaladas === 0) {
-        document.getElementById('resultado').innerHTML = `<strong style='color:red'>Erro:</strong> Pelo menos um dos campos de parcelas (mensais ou intercaladas) deve ser maior que zero.`;
-        return;
-      }
+    document.getElementById('btnCalcular').addEventListener('click', calcularFluxo);
+
+    function calcularFluxo() {
+      // Ler inputs com proteções para null
+      const valorTotal = obterValorNumerico((document.getElementById('valor') || {}).value || '0,00');
+      const percentualEntregaEl = document.getElementById('percentualEntrega');
+      const percentualSinalEl = document.getElementById('percentualSinal');
+      const parcelasMensaisEl = document.getElementById('parcelasMensais');
+      const parcelasSinalEl = document.getElementById('parcelasSinal');
+
+      const percentualEntrega = percentualEntregaEl ? (parseFloat(percentualEntregaEl.value) / 100) : 0.6;
+      const percentualSinal = percentualSinalEl ? (parseFloat(percentualSinalEl.value) / 100) : 0.10;
+      const parcelasMensais = parcelasMensaisEl ? (parseInt(parcelasMensaisEl.value,10) || 0) : 0;
+      const parcelasIntercaladas = lerParcelasIntercaladas();
+      const parcelasSinal = parcelasSinalEl ? (parseInt(parcelasSinalEl.value,10) || 1) : 1;
+
+      // Validações
+      const out = document.getElementById('resultado');
+      out.innerHTML = '';
+      if (isNaN(valorTotal) || valorTotal <= 0) { out.innerHTML = `<strong style='color:red'>Erro:</strong> Valor do imóvel inválido.`; return; }
+      if (percentualSinal > percentualEntrega) { out.innerHTML = `<strong style='color:red'>Erro:</strong> O percentual do sinal não pode ser maior que o percentual até a entrega.`; return; }
+      if (parcelasMensais === 0 && parcelasIntercaladas === 0) { out.innerHTML = `<strong style='color:red'>Erro:</strong> Pelo menos um dos campos de parcelas (mensais ou intercaladas) deve ser maior que zero.`; return; }
 
       // Cálculos
       const totalAteEntrega = valorTotal * percentualEntrega; // ex: 60% do imóvel
       const valorSinal = valorTotal * percentualSinal; // ex: 10% do imóvel
-
       const percentualRestante = percentualEntrega - percentualSinal; // o que falta até o percentualEntrega
 
       // dividir o percentual restante entre mensais e intercaladas (metade/metade por padrão)
@@ -156,7 +123,7 @@
         percentualIntercaladas = 0;
       }
 
-      // calcular valores unitários
+      // calcular valores unitários e totais
       const valorTotalMensaisParte = valorTotal * percentualMensais; // total em reais destinado às mensais
       const valorTotalIntercaladasParte = valorTotal * percentualIntercaladas; // total em reais destinado às intercaladas
 
@@ -171,7 +138,7 @@
       const somaPartes = valorSinal + (valorMensais * parcelasMensais) + (valorIntercaladas * parcelasIntercaladas);
 
       // Exibir resultado claro para cliente
-      document.getElementById('resultado').innerHTML = `
+      out.innerHTML = `
         <strong>Valor do imóvel:</strong> ${fmt(valorTotal)}<br>
         <strong>Valor do sinal (${(percentualSinal*100).toFixed(2).replace('.00','')}%):</strong> ${fmt(valorSinal)} (${parcelasSinal}x de ${fmt(valorSinal / parcelasSinal)})<br>
         <strong>Total até a entrega (${(percentualEntrega*100).toFixed(2).replace('.00','')}%):</strong> ${fmt(totalAteEntrega)}<br>
