@@ -14,17 +14,11 @@
     .radios-row label { font-weight:400 }
     button { width:100%; margin-top:18px; background:#003366; color:#fff; border:none; padding:12px; border-radius:8px; font-size:17px; cursor:pointer }
     button:hover { background:#00509e }
-<<<<<<< HEAD
     .result { margin-top:20px; background:#eef3fa; padding:18px; border-radius:8px; font-size:15px; white-space:pre-wrap }
     .small { font-size:13px; color:#444 }
     hr { border:0; height:1px; background:#e0e7f0; margin:12px 0 }
     .actions { display:flex; gap:10px }
     .whatsapp { background:#25D366 }
-=======
-    .result { margin-top:20px; background:#eef3fa; padding:18px; border-radius:8px; font-size:15px }
-    .small { font-size:13px; color:#444 }
-    hr { border:0; height:1px; background:#e0e7f0; margin:12px 0 }
->>>>>>> 0668d510a9069e53695458036156e2fbab3d780b
   </style>
 </head>
 <body>
@@ -35,7 +29,6 @@
     <input type="text" id="valor" value="730.000,00" />
 
     <label class="field">Percentual até a entrega (%)</label>
-<<<<<<< HEAD
     <div style="display:flex; gap:10px; margin-bottom:8px;" role="radiogroup" aria-label="Percentual até a entrega">
       <label><input type="radio" name="percentualEntrega" value="45"> 45%</label>
       <label><input type="radio" name="percentualEntrega" value="50"> 50%</label>
@@ -48,15 +41,6 @@
     <div id="percentualCustomContainer" style="display: none; margin-top: 6px;">
       <input type="number" id="percentualCustom" min="1" max="100" placeholder="Digite o percentual (1-100)" style="width: 200px;" />
     </div>
-=======
-<div style="display:flex; gap:10px; margin-bottom:8px;">
-  <label><input type="radio" name="percentualEntrega" value="45"> 45%</label>
-  <label><input type="radio" name="percentualEntrega" value="50"> 50%</label>
-  <label><input type="radio" name="percentualEntrega" value="55"> 55%</label>
-  <label><input type="radio" name="percentualEntrega" value="60" checked> 60%</label>
-  <label><input type="radio" name="percentualEntrega" value="65"> 65%</label>
-</div>
->>>>>>> 0668d510a9069e53695458036156e2fbab3d780b
 
     <label class="field" for="percentualSinal">Percentual do sinal (%)</label>
     <input type="number" id="percentualSinal" value="10" min="0" max="100" />
@@ -79,14 +63,10 @@
       <option value="4">4</option>
     </select>
 
-<<<<<<< HEAD
     <div class="actions">
       <button id="btnCalcular">Calcular Fluxo</button>
       <button id="btnWhatsapp" class="whatsapp" type="button">Compartilhar no WhatsApp</button>
     </div>
-=======
-    <button id="btnCalcular">Calcular Fluxo</button>
->>>>>>> 0668d510a9069e53695458036156e2fbab3d780b
 
     <div class="result" id="resultado"></div>
   </div>
@@ -106,7 +86,6 @@
     }
 
     // máscara simples para o campo de valor
-<<<<<<< HEAD
     const campoValor = document.getElementById('valor');
     campoValor.addEventListener('input', function(e){
       e.target.value = formatarMoeda(e.target.value);
@@ -188,38 +167,6 @@
       const parcelasMensais = parseInt((document.getElementById('parcelasMensais') || {}).value,10) || 0;
       const parcelasIntercaladas = lerParcelasIntercaladas();
       const parcelasSinal = parseInt((document.getElementById('parcelasSinal') || {}).value,10) || 1;
-=======
-    document.getElementById('valor').addEventListener('input', function(e){
-      const pos = e.target.selectionStart;
-      e.target.value = formatarMoeda(e.target.value);
-      // não tentamos preservar caret perfeitamente para simplicidade
-    });
-
-    // função de leitura do radio/checkbox de intercaladas
-    function lerParcelasIntercaladas() {
-      const usarZero = document.getElementById('usarIntercaladasZero').checked;
-      if (usarZero) return 0;
-      const r = document.querySelector('input[name="parcelasIntercaladas"]:checked');
-      if (!r) return 4; // fallback
-      return parseInt(r.value, 10) || 4;
-    }
-
-    document.getElementById('btnCalcular').addEventListener('click', calcularFluxo);
-
-    function calcularFluxo() {
-      // Ler inputs com proteções para null
-      const valorTotal = obterValorNumerico((document.getElementById('valor') || {}).value || '0,00');
-      const percentualEntregaEl = document.getElementById('percentualEntrega');
-      const percentualSinalEl = document.getElementById('percentualSinal');
-      const parcelasMensaisEl = document.getElementById('parcelasMensais');
-      const parcelasSinalEl = document.getElementById('parcelasSinal');
-
-      const percentualEntrega = percentualEntregaEl ? (parseFloat(percentualEntregaEl.value) / 100) : 0.6;
-      const percentualSinal = percentualSinalEl ? (parseFloat(percentualSinalEl.value) / 100) : 0.10;
-      const parcelasMensais = parcelasMensaisEl ? (parseInt(parcelasMensaisEl.value,10) || 0) : 0;
-      const parcelasIntercaladas = lerParcelasIntercaladas();
-      const parcelasSinal = parcelasSinalEl ? (parseInt(parcelasSinalEl.value,10) || 1) : 1;
->>>>>>> 0668d510a9069e53695458036156e2fbab3d780b
 
       // Validações
       const out = document.getElementById('resultado');
